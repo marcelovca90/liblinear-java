@@ -10,7 +10,7 @@ class L2R_L2_SvcFunction implements Function {
     protected final int[]    I;
     protected final double[] z;
     protected double[]       D;
-    private final boolean    POLY2 = false;;
+    private final boolean    POLY2 = true;
     protected double         coef0;
     protected double         gamma;
     protected double         sqrt2;

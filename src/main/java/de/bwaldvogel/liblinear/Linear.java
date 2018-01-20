@@ -46,7 +46,7 @@ public class Linear {
     private static final long    DEFAULT_RANDOM_SEED = 0L;
     static Random                random              = new Random(DEFAULT_RANDOM_SEED);
 
-    private static final boolean POLY2               = false;
+    private static final boolean POLY2               = true;
 
     /**
      * @param target predicted classes
@@ -82,6 +82,10 @@ public class Linear {
             subprob.l = l - (end - begin);
             subprob.x = new Feature[subprob.l][];
             subprob.y = new double[subprob.l];
+            if (POLY2) {
+                subprob.coef0 = param.coef0;
+                subprob.gamma = param.gamma;
+            }
 
             k = 0;
             for (j = 0; j < begin; j++) {
@@ -140,6 +144,10 @@ public class Linear {
             subprob[i].l = l - (end - begin);
             subprob[i].x = new Feature[subprob[i].l][];
             subprob[i].y = new double[subprob[i].l];
+            if (POLY2) {
+                subprob[i].coef0 = param.coef0;
+                subprob[i].gamma = param.gamma;
+            }
 
             k = 0;
             for (j = 0; j < begin; j++) {
@@ -173,10 +181,17 @@ public class Linear {
                 Model submodel = train(subprob[i], param1);
 
                 int total_w_size;
-                if (submodel.nr_class == 2)
-                    total_w_size = subprob[i].n;
-                else
-                    total_w_size = subprob[i].n * submodel.nr_class;
+                if (POLY2) {
+                    if (submodel.nr_class == 2)
+                        total_w_size = (subprob[i].n + 2) * (subprob[i].n + 1) / 2;
+                    else
+                        total_w_size = (subprob[i].n + 2) * (subprob[i].n + 1) / 2 * submodel.nr_class;
+                } else {
+                    if (submodel.nr_class == 2)
+                        total_w_size = subprob[i].n;
+                    else
+                        total_w_size = subprob[i].n * submodel.nr_class;
+                }
 
                 if (prev_w[i] == null) {
                     prev_w[i] = new double[total_w_size];
@@ -649,7 +664,7 @@ public class Linear {
     private static void solve_l2r_l1l2_svc(Problem prob, double[] w, double eps, double Cp, double Cn, SolverType solver_type, int max_iter) {
         int l = prob.l;
         int n = prob.n;
-        int w_size = POLY2 ? ((n + 2) * (n + 1) / 2) : prob.n;
+        int w_size = POLY2 ? (n + 2) * (n + 1) / 2 : prob.n;
         int i, s, iter = 0;
         double C, d, G;
         double[] QD = new double[l];
@@ -702,8 +717,28 @@ public class Linear {
             QD[i] = diag[GETI(y, i)];
 
             Feature[] xi = prob.x[i];
-            QD[i] += SparseOperator.nrm2_sq(xi);
-            SparseOperator.axpy(y[i] * alpha[i], xi, w);
+
+            if (POLY2) {
+                tmp_value = 0;
+                double y_alpha = y[i] * alpha[i];
+                double sqrt2_y_alpha = sqrt2 * y_alpha;
+                w[0] += y_alpha * coef0;
+                for (Feature fi : xi) {
+                    double val_sq = (fi.getValue()) * (fi.getValue());
+                    tmp_value += val_sq;
+                    Feature[] xj = prob.x[i + 1];
+                    double[] w_x = SparseOperator.subarray(w, ((fi.getIndex()) * (2 * n - fi.getIndex() + 1)) / 2);
+                    w_x[fi.getIndex()] += y_alpha * val_sq;
+                    for (Feature fj : xj)
+                        w_x[fj.getIndex()] += sqrt2_y_alpha * (fi.getValue()) * (fj.getValue());
+                    w[fi.getIndex()] += sqrt2_y_alpha * coef0 * (fi.getValue());
+                }
+                tmp_value += gamma * tmp_value + coef0;
+                QD[i] += tmp_value * tmp_value;
+            } else {
+                QD[i] += SparseOperator.nrm2_sq(xi);
+                SparseOperator.axpy(y[i] * alpha[i], xi, w);
+            }
 
             index[i] = i;
         }
@@ -719,10 +754,27 @@ public class Linear {
 
             for (s = 0; s < active_size; s++) {
                 i = index[s];
+                G = 0;
                 byte yi = y[i];
                 Feature[] xi = prob.x[i];
 
-                G = yi * SparseOperator.dot(w, xi) - 1;
+                if (POLY2) {
+                    Feature[] xj;
+                    G += w[0] * coef0;
+                    for (Feature fi : xi) {
+                        tmp_value = 0;
+                        xj = prob.x[i + 1];
+                        double[] w_x = SparseOperator.subarray(w, (fi.getIndex() * (2 * n - fi.getIndex() + 1)) / 2);
+                        for (Feature fj : xj)
+                            tmp_value += w_x[fj.getIndex()] * (fj.getValue());
+                        tmp_value *= sqrt2_g;
+                        tmp_value += w_x[fi.getIndex()] * (fi.getValue()) * gamma;
+                        tmp_value += w[fi.getIndex()] * sqrt2_coef0_g;
+                        G += tmp_value * (fi.getValue());
+                    }
+                } else {
+                    G = yi * SparseOperator.dot(w, xi) - 1;
+                }
 
                 C = upper_bound[GETI(y, i)];
                 G += alpha[i] * diag[GETI(y, i)];
@@ -757,7 +809,20 @@ public class Linear {
                     double alpha_old = alpha[i];
                     alpha[i] = Math.min(Math.max(alpha[i] - G / QD[i], 0.0), C);
                     d = (alpha[i] - alpha_old) * yi;
-                    SparseOperator.axpy(d, xi, w);
+                    if (POLY2) {
+                        w[0] += d * coef0;
+                        for (Feature fi : xi) {
+                            tmp_value = d * fi.getValue();
+                            Feature[] xj = prob.x[i + 1];
+                            double[] w_x = SparseOperator.subarray(w, ((fi.getIndex()) * (2 * n - fi.getIndex() + 1)) / 2);
+                            w_x[fi.getIndex()] += gamma * tmp_value * (fi.getValue());
+                            for (Feature fj : xj) // quadratic
+                                w_x[fj.getIndex()] += sqrt2_g * tmp_value * (fj.getValue());
+                            w[fi.getIndex()] += tmp_value * sqrt2_coef0_g;
+                        }
+                    } else {
+                        SparseOperator.axpy(d, xi, w);
+                    }
                 }
             }
 
@@ -832,7 +897,8 @@ public class Linear {
         int l = prob.l;
         double C = param.C;
         double p = param.p;
-        int w_size = prob.n;
+        int n = prob.n;
+        int w_size = POLY2 ? (n + 2) * (n + 1) / 2 : prob.n;
         double eps = param.eps;
         int i, s, iter = 0;
         int max_iter = param.getMaxIters();
@@ -851,6 +917,13 @@ public class Linear {
         double[] lambda = new double[] {0.5 / C};
         double[] upper_bound = new double[] {Double.POSITIVE_INFINITY};
 
+        double coef0 = prob.coef0;
+        double gamma = prob.gamma;
+        double sqrt2 = sqrt(2.0);
+        double sqrt2_coef0_g = sqrt2 * sqrt(coef0 * gamma);
+        double sqrt2_g = sqrt2 * gamma;
+        double tmp_value;
+
         if (param.solverType == SolverType.L2R_L1LOSS_SVR_DUAL) {
             lambda[0] = 0;
             upper_bound[0] = C;
@@ -864,9 +937,28 @@ public class Linear {
         for (i = 0; i < w_size; i++)
             w[i] = 0;
         for (i = 0; i < l; i++) {
+            QD[i] = 0;
             Feature[] xi = prob.x[i];
-            QD[i] = SparseOperator.nrm2_sq(xi);
-            SparseOperator.axpy(beta[i], xi, w);
+            if (POLY2) {
+                tmp_value = 0;
+                double sqrt2_beta = sqrt2 * beta[i];
+                w[0] += beta[i] * coef0;
+                for (Feature fi : xi) {
+                    double val_sq = (fi.getValue()) * (fi.getValue());
+                    tmp_value += val_sq;
+                    Feature[] xj = prob.x[i + 1];
+                    double[] w_x = SparseOperator.subarray(w, ((fi.getIndex()) * (2 * n - fi.getIndex() + 1)) / 2);
+                    w_x[fi.getIndex()] += beta[i] * val_sq;
+                    for (Feature fj : xj)
+                        w_x[fj.getIndex()] += sqrt2_beta * (fi.getValue()) * (fj.getValue());
+                    w[fi.getIndex()] += sqrt2_beta * coef0 * (fi.getValue());
+                }
+                tmp_value = gamma * tmp_value + coef0;
+                QD[i] += tmp_value * tmp_value;
+            } else {
+                QD[i] = SparseOperator.nrm2_sq(xi);
+                SparseOperator.axpy(beta[i], xi, w);
+            }
 
             index[i] = i;
         }
@@ -886,7 +978,23 @@ public class Linear {
                 H = QD[i] + lambda[GETI_SVR(i)];
 
                 Feature[] xi = prob.x[i];
-                G += SparseOperator.dot(w, xi);
+                if (POLY2) {
+                    Feature[] xj;
+                    G += w[0] * coef0; // bias
+                    for (Feature fi : xi) {
+                        tmp_value = 0;
+                        xj = prob.x[i + 1];
+                        double[] w_x = SparseOperator.subarray(w, ((fi.getIndex()) * (2 * n - fi.getIndex() + 1)) / 2);
+                        for (Feature fj : xj)
+                            tmp_value += w_x[fj.getIndex()] * (fj.getValue());
+                        tmp_value *= sqrt2_g;
+                        tmp_value += w_x[fi.getIndex()] * (fi.getValue()) * gamma;
+                        tmp_value += w[fi.getIndex()] * sqrt2_coef0_g;
+                        G += tmp_value * (fi.getValue());
+                    }
+                } else {
+                    G += SparseOperator.dot(w, xi);
+                }
 
                 double Gp = G + p;
                 double Gn = G - p;
@@ -941,8 +1049,23 @@ public class Linear {
                 double beta_old = beta[i];
                 beta[i] = Math.min(Math.max(beta[i] + d, -upper_bound[GETI_SVR(i)]), upper_bound[GETI_SVR(i)]);
                 d = beta[i] - beta_old;
+                xi = prob.x[i];
 
-                if (d != 0) SparseOperator.axpy(d, xi, w);
+                if (d != 0) {
+                    if (POLY2) {
+                        w[0] += d * coef0;
+                        for (Feature fi : xi) {
+                            tmp_value = d * fi.getValue();
+                            Feature[] xj = prob.x[i + 1];
+                            double[] w_x = SparseOperator.subarray(w, ((fi.getIndex()) * (2 * n - fi.getIndex() + 1)) / 2);
+                            for (Feature fj : xj) // quadratic
+                                w_x[fj.getIndex()] += sqrt2_g * tmp_value * (fj.getValue());
+                            w[fi.getIndex()] += tmp_value * sqrt2_coef0_g;
+                        }
+                    } else {
+                        SparseOperator.axpy(d, xi, w);
+                    }
+                }
             }
 
             if (iter == 0) Gnorm1_init = Gnorm1_new;
@@ -1035,6 +1158,7 @@ public class Linear {
         for (i = 0; i < w_size; i++)
             w[i] = 0;
         for (i = 0; i < l; i++) {
+            xTx[i] = 0;
             Feature[] xi = prob.x[i];
             xTx[i] = SparseOperator.nrm2_sq(xi);
             SparseOperator.axpy(y[i] * alpha[2 * i], xi, w);
@@ -1753,7 +1877,7 @@ public class Linear {
 
         int l = prob.l;
         int n = prob.n;
-        int w_size = prob.n;
+        int w_size = POLY2 ? (n + 2) * (n + 1) / 2 : prob.n;
         Model model = new Model();
 
         if (prob.bias >= 0)
@@ -1791,6 +1915,13 @@ public class Linear {
             for (int i = 0; i < nr_class; i++)
                 model.label[i] = label[i];
 
+            Problem sub_prob = new Problem();
+
+            if (POLY2) {
+                sub_prob.coef0 = param.coef0; // quadratic
+                sub_prob.gamma = param.gamma;
+            }
+
             // calculate weighted C
             double[] weighted_C = new double[nr_class];
             for (int i = 0; i < nr_class; i++)
@@ -1809,7 +1940,6 @@ public class Linear {
             for (int i = 0; i < l; i++)
                 x[i] = prob.x[perm[i]];
 
-            Problem sub_prob = new Problem();
             sub_prob.l = l;
             sub_prob.n = n;
             sub_prob.x = new Feature[sub_prob.l][];
@@ -1982,6 +2112,7 @@ public class Linear {
                 double val = xi.getValue();
                 xTx += val * val;
             }
+            if (POLY2) xTx = (param.gamma * xTx + param.coef0) * (param.gamma * xTx + param.coef0);
             if (xTx > max_xTx) max_xTx = xTx;
         }
 
