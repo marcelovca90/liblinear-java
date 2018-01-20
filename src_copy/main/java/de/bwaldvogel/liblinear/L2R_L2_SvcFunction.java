@@ -113,54 +113,16 @@ class L2R_L2_SvcFunction implements Function {
 
         for (i = 0; i < w_size; i++)
             XTv[i] = 0;
-
-        if (POLY2) {
-            int n = prob.n;
-            for (i = 0; i < sizeI; i++) {
-                Feature[] xi = x[I[i]];
-                Feature[] xj;
-                XTv[0] += v[i] * coef0;
-                for (Feature fi : xi) {
-                    xj = x[i + 1];
-                    double[] XTv_x = SparseOperator.subarray(XTv, (fi.getIndex() * (2 * n - fi.getIndex() + 1)) / 2);
-                    for (Feature fj : xj) // quadratic
-                        XTv_x[fj.getIndex()] += v[i] * (fj.getValue()) * sqrt2_g * fi.getValue();
-                    XTv_x[fi.getIndex()] += v[i] * fi.getValue() * fi.getValue() * gamma;
-                    XTv[fi.getIndex()] += v[i] * sqrt2_coef0_g * fi.getValue();
-                }
-            }
-        } else {
-            for (i = 0; i < sizeI; i++)
-                SparseOperator.axpy(v[i], x[I[i]], XTv);
-        }
+        for (i = 0; i < sizeI; i++)
+            SparseOperator.axpy(v[i], x[I[i]], XTv);
     }
 
     protected void Xv(double[] v, double[] Xv) {
         int l = prob.l;
         Feature[][] x = prob.x;
-        if (POLY2) {
-            double tmp_value;
-            int n = prob.n;
-            for (int i = 0; i < l; i++) {
-                Feature[] xi = x[i];
-                Feature[] xj;
-                Xv[i] = v[0] * coef0;
-                for (Feature fi : xi) {
-                    tmp_value = 0.0;
-                    xj = x[i + 1];
-                    double[] v_x = SparseOperator.subarray(v, (fi.getIndex() * (2 * n - fi.getIndex() + 1)) / 2);
-                    for (Feature fj : xj) // quadratic
-                        tmp_value += v_x[fj.getIndex()] * (fj.getValue());
-                    tmp_value *= sqrt2_g;
-                    tmp_value += v_x[fi.getIndex()] * (fi.getValue()) * gamma;
-                    tmp_value += v[fi.getIndex()] * sqrt2_coef0_g;
-                    Xv[i] += tmp_value * (fi.getValue());
-                }
-            }
-        } else {
-            for (int i = 0; i < l; i++)
-                Xv[i] = SparseOperator.dot(v, x[i]);
-        }
+
+        for (int i = 0; i < l; i++)
+            Xv[i] = SparseOperator.dot(v, x[i]);
     }
 
     @Override

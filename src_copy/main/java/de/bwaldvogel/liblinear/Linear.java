@@ -1,7 +1,5 @@
 package de.bwaldvogel.liblinear;
 
-import static java.lang.Math.sqrt;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.EOFException;
@@ -34,19 +32,17 @@ import java.util.regex.Pattern;
  */
 public class Linear {
 
-    static final int             VERSION             = 220;
+    static final int           VERSION             = 220;
 
-    static final Charset         FILE_CHARSET        = StandardCharsets.ISO_8859_1;
+    static final Charset       FILE_CHARSET        = StandardCharsets.ISO_8859_1;
 
-    static final Locale          DEFAULT_LOCALE      = Locale.ENGLISH;
+    static final Locale        DEFAULT_LOCALE      = Locale.ENGLISH;
 
-    private static Object        OUTPUT_MUTEX        = new Object();
-    private static PrintStream   DEBUG_OUTPUT        = System.out;
+    private static Object      OUTPUT_MUTEX        = new Object();
+    private static PrintStream DEBUG_OUTPUT        = System.out;
 
-    private static final long    DEFAULT_RANDOM_SEED = 0L;
-    static Random                random              = new Random(DEFAULT_RANDOM_SEED);
-
-    private static final boolean POLY2               = false;
+    private static final long  DEFAULT_RANDOM_SEED = 0L;
+    static Random              random              = new Random(DEFAULT_RANDOM_SEED);
 
     /**
      * @param target predicted classes
@@ -119,8 +115,7 @@ public class Linear {
             System.err.println("WARNING: # folds > # data. Will use # folds = # data instead (i.e., leave-one-out cross validation)");
         }
         int[] fold_start = new int[nr_fold + 1];
-        for (i = 0; i < l; i++)
-            perm[i] = i;
+        for (i = 0; i < l; i++) perm[i] = i;
         for (i = 0; i < l; i++) {
             int j = i + random.nextInt(l - i);
             swap(perm, i, j);
@@ -157,7 +152,8 @@ public class Linear {
 
         double best_C = Double.NaN;
         double best_rate = 0;
-        if (start_C <= 0) start_C = calc_start_C(prob, param);
+        if (start_C <= 0)
+            start_C = calc_start_C(prob, param);
         param1.C = start_C;
 
         while (param1.C <= max_C) {
@@ -190,7 +186,8 @@ public class Linear {
                     }
                     norm_w_diff = Math.sqrt(norm_w_diff);
 
-                    if (norm_w_diff > 1e-15) num_unchanged_w = -1;
+                    if (norm_w_diff > 1e-15)
+                        num_unchanged_w = -1;
                 } else {
                     for (j = 0; j < total_w_size; j++)
                         prev_w[i][j] = submodel.w[j];
@@ -203,8 +200,9 @@ public class Linear {
 
             int total_correct = 0;
             for (i = 0; i < prob.l; i++)
-                if (target[i] == prob.y[i]) ++total_correct;
-            double current_rate = (double)total_correct / prob.l;
+                if (target[i] == prob.y[i])
+                    ++total_correct;
+            double current_rate = (double) total_correct / prob.l;
             if (current_rate > best_rate) {
                 best_C = param1.C;
                 best_rate = current_rate;
@@ -212,11 +210,13 @@ public class Linear {
 
             info("log2c=%7.2f\trate=%g%n", Math.log(param1.C) / Math.log(2.0), 100.0 * current_rate);
             num_unchanged_w++;
-            if (num_unchanged_w == 3) break;
+            if (num_unchanged_w == 3)
+                break;
             param1.C = param1.C * ratio;
         }
 
-        if (param1.C > max_C && max_C > start_C) info("warning: maximum C reached.\n");
+        if (param1.C > max_C && max_C > start_C)
+            info("warning: maximum C reached.\n");
 
         return new ParameterSearchResult(best_C, best_rate);
     }
@@ -229,7 +229,7 @@ public class Linear {
         final int   nr_class;
         final int[] start;
 
-        GroupClassesReturn( int nr_class, int[] label, int[] start, int[] count ) {
+        GroupClassesReturn(int nr_class, int[] label, int[] start, int[] count) {
             this.nr_class = nr_class;
             this.label = label;
             this.start = start;
@@ -248,7 +248,7 @@ public class Linear {
         int i;
 
         for (i = 0; i < l; i++) {
-            int this_label = (int)prob.y[i];
+            int this_label = (int) prob.y[i];
             int j;
             for (j = 0; j < nr_class; j++) {
                 if (this_label == label[j]) {
@@ -375,7 +375,7 @@ public class Linear {
 
         BufferedReader reader = null;
         if (inputReader instanceof BufferedReader) {
-            reader = (BufferedReader)inputReader;
+            reader = (BufferedReader) inputReader;
         } else {
             reader = new BufferedReader(inputReader);
         }
@@ -430,9 +430,9 @@ public class Linear {
                         break;
                     } else {
                         if (b >= buffer.length) {
-                            throw new RuntimeException("illegal weight in model file at index " + (i * nr_w + j) + ", with string content '"
-                                + new String(buffer, 0, buffer.length) + "', is not terminated " + "with a whitespace character, or is longer than expected ("
-                                + buffer.length + " characters max).");
+                            throw new RuntimeException("illegal weight in model file at index " + (i * nr_w + j) + ", with string content '" +
+                                    new String(buffer, 0, buffer.length) + "', is not terminated " +
+                                    "with a whitespace character, or is longer than expected (" + buffer.length + " characters max).");
                         }
                         buffer[b++] = ch;
                     }
@@ -449,8 +449,8 @@ public class Linear {
      */
     public static Model loadModel(File modelFile) throws IOException {
         try (FileInputStream in = new FileInputStream(modelFile);
-                InputStreamReader inputStreamReader = new InputStreamReader(in, FILE_CHARSET);
-                BufferedReader inputReader = new BufferedReader(inputStreamReader)) {
+             InputStreamReader inputStreamReader = new InputStreamReader(in, FILE_CHARSET);
+             BufferedReader inputReader = new BufferedReader(inputStreamReader)) {
             return loadModel(inputReader);
         }
     }
@@ -648,8 +648,7 @@ public class Linear {
      */
     private static void solve_l2r_l1l2_svc(Problem prob, double[] w, double eps, double Cp, double Cn, SolverType solver_type, int max_iter) {
         int l = prob.l;
-        int n = prob.n;
-        int w_size = POLY2 ? ((n + 2) * (n + 1) / 2) : prob.n;
+        int w_size = prob.n;
         int i, s, iter = 0;
         double C, d, G;
         double[] QD = new double[l];
@@ -667,15 +666,6 @@ public class Linear {
         // default solver_type: L2R_L2LOSS_SVC_DUAL
         double diag[] = new double[] {0.5 / Cn, 0, 0.5 / Cp};
         double upper_bound[] = new double[] {Double.POSITIVE_INFINITY, 0, Double.POSITIVE_INFINITY};
-
-        // w: 1: bias, n:linear, (n+1)n/2: quadratic
-        double coef0 = prob.coef0;
-        double gamma = prob.gamma;
-        double sqrt2 = sqrt(2.0);
-        double sqrt2_coef0_g = sqrt2 * sqrt(coef0 * gamma);
-        double sqrt2_g = sqrt2 * gamma;
-        double tmp_value;
-
         if (solver_type == SolverType.L2R_L1LOSS_SVC_DUAL) {
             diag[0] = 0;
             diag[2] = 0;
@@ -942,7 +932,8 @@ public class Linear {
                 beta[i] = Math.min(Math.max(beta[i] + d, -upper_bound[GETI_SVR(i)]), upper_bound[GETI_SVR(i)]);
                 d = beta[i] - beta_old;
 
-                if (d != 0) SparseOperator.axpy(d, xi, w);
+                if (d != 0)
+                    SparseOperator.axpy(d, xi, w);
             }
 
             if (iter == 0) Gnorm1_init = Gnorm1_new;
@@ -1118,8 +1109,8 @@ public class Linear {
             v += w[i] * w[i];
         v *= 0.5;
         for (i = 0; i < l; i++)
-            v += alpha[2 * i] * Math.log(alpha[2 * i]) + alpha[2 * i + 1] * Math.log(alpha[2 * i + 1])
-                - upper_bound[GETI(y, i)] * Math.log(upper_bound[GETI(y, i)]);
+            v += alpha[2 * i] * Math.log(alpha[2 * i]) + alpha[2 * i + 1] * Math.log(alpha[2 * i + 1]) - upper_bound[GETI(y, i)]
+                    * Math.log(upper_bound[GETI(y, i)]);
         info("Objective value = %g%n", v);
     }
 
@@ -1473,7 +1464,7 @@ public class Linear {
                         violation = -Gp;
                     else if (Gn > 0)
                         violation = Gn;
-                    //outer-level shrinking
+                        //outer-level shrinking
                     else if (Gp > Gmax_old / l && Gn < -Gmax_old / l) {
                         active_size--;
                         swap(index, s, active_size);
@@ -1528,7 +1519,7 @@ public class Linear {
                             violation = -Gp;
                         else if (Gn > 0)
                             violation = Gn;
-                        //inner-level shrinking
+                            //inner-level shrinking
                         else if (Gp > QP_Gmax_old / l && Gn < -QP_Gmax_old / l) {
                             QP_active_size--;
                             swap(index, s, QP_active_size);
@@ -1566,7 +1557,7 @@ public class Linear {
                     //inner stopping
                     if (QP_active_size == active_size)
                         break;
-                    //active set reactivation
+                        //active set reactivation
                     else {
                         QP_active_size = active_size;
                         QP_Gmax_old = Double.POSITIVE_INFINITY;
@@ -1894,7 +1885,8 @@ public class Linear {
         // inner and outer tolerances for TRON
         double eps = param.eps;
         double eps_cg = 0.1;
-        if (param.init_sol != null) eps_cg = 0.5;
+        if (param.init_sol != null)
+            eps_cg = 0.5;
 
         int pos = 0;
         for (int i = 0; i < prob.l; i++)
@@ -1982,13 +1974,15 @@ public class Linear {
                 double val = xi.getValue();
                 xTx += val * val;
             }
-            if (xTx > max_xTx) max_xTx = xTx;
+            if (xTx > max_xTx)
+                max_xTx = xTx;
         }
 
         double min_C = 1.0;
         if (param.getSolverType() == SolverType.L2R_LR)
             min_C = 1.0 / (prob.l * max_xTx);
-        else if (param.getSolverType() == SolverType.L2R_L2LOSS_SVC) min_C = 1.0 / (2 * prob.l * max_xTx);
+        else if (param.getSolverType() == SolverType.L2R_L2LOSS_SVC)
+            min_C = 1.0 / (2 * prob.l * max_xTx);
 
         return Math.pow(2, Math.floor(Math.log(min_C) / Math.log(2.0)));
     }

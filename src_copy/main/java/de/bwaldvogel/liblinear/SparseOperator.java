@@ -1,8 +1,5 @@
 package de.bwaldvogel.liblinear;
 
-import java.util.Arrays;
-
-
 class SparseOperator {
 
     static double nrm2_sq(Feature[] x) {
@@ -13,18 +10,10 @@ class SparseOperator {
         return (ret);
     }
 
-    static double dot(double[] v, Feature[] x) {
+    static double dot(double[] s, Feature[] x) {
         double ret = 0;
-        for (Feature s : x) {
-            ret += v[s.getIndex() - 1] * s.getValue();
-        }
-        return (ret);
-    }
-
-    static double dot2(double[] v_x, Feature[] x) {
-        double ret = 0;
-        for (Feature xj : x) {
-            ret += v_x[xj.getIndex()] * xj.getValue();
+        for (Feature feature : x) {
+            ret += s[feature.getIndex() - 1] * feature.getValue();
         }
         return (ret);
     }
@@ -35,7 +24,4 @@ class SparseOperator {
         }
     }
 
-    static double[] subarray(double[] v, int i) {
-        return Arrays.copyOfRange(v, i, v.length - 1);
-    }
 }
