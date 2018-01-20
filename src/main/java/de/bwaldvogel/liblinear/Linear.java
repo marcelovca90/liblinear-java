@@ -411,6 +411,10 @@ public class Linear {
                 model.nr_feature = atoi(split[1]);
             } else if (split[0].equals("bias")) {
                 model.bias = atof(split[1]);
+            } else if (split[0].equals("coef0")) {
+                model.param.coef0 = atof(split[1]);
+            } else if (split[0].equals("gamma")) {
+                model.param.gamma = atof(split[1]);
             } else if (split[0].equals("w")) {
                 break;
             } else if (split[0].equals("label")) {
@@ -423,8 +427,19 @@ public class Linear {
             }
         }
 
-        int w_size = model.nr_feature;
-        if (model.bias >= 0) w_size++;
+        int n;
+        int nr_feature = model.nr_feature;
+        int w_size;
+
+        if (model.bias >= 0)
+            n = nr_feature + 1;
+        else
+            n = nr_feature;
+
+        if (POLY2)
+            w_size = (n + 2) * (n + 1) / 2;
+        else
+            w_size = n;
 
         int nr_w = model.nr_class;
         if (model.nr_class == 2 && model.solverType != SolverType.MCSVM_CS) nr_w = 1;
@@ -533,15 +548,50 @@ public class Linear {
         else
             nr_w = model.nr_class;
 
-        for (int i = 0; i < nr_w; i++)
-            dec_values[i] = 0;
+        if (POLY2) {
+            int idx2;
+            double[] tmp_values = new double[nr_w];
+            double coef0 = model.param.coef0;
+            double gamma = model.param.gamma;
+            double sqrt2 = sqrt(2.0);
+            double sqrt2_coef0_g = sqrt2 * sqrt(coef0 * gamma);
+            double sqrt2_g = sqrt2 * gamma;
 
-        for (Feature lx : x) {
-            int idx = lx.getIndex();
-            // the dimension of testing data may exceed that of training
-            if (idx <= n) {
-                for (int i = 0; i < nr_w; i++) {
-                    dec_values[i] += w[(idx - 1) * nr_w + i] * lx.getValue();
+            for (int i = 0; i < nr_w; i++)
+                dec_values[i] = w[i] * coef0;
+
+            for (Feature lx : x) {
+                // the dimension of testing data may exceed that of training
+                int idx = lx.getIndex();
+                if (idx <= n) {
+                    for (int i = 0; i < nr_w; i++)
+                        tmp_values[i] = 0;
+                    Feature[] x2 = x + 1;
+                    int w_idx = (idx * (2 * n - idx + 1)) / 2;
+                    for (Feature lx2 : x2) {
+                        idx2 = lx.getIndex();
+                        for (int i = 0; i < nr_w; i++)
+                            tmp_values[i] += w[(w_idx + idx2) * nr_w + i] * lx2.getValue();
+                    }
+                    for (int i = 0; i < nr_w; i++) {
+                        tmp_values[i] *= sqrt2_g;
+                        tmp_values[i] += w[(w_idx + idx) * nr_w + i] * (lx.getValue()) * gamma;
+                        tmp_values[i] += w[idx * nr_w + i] * sqrt2_coef0_g;
+                        dec_values[i] += tmp_values[i] * (lx.getValue());
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < nr_w; i++)
+                dec_values[i] = 0;
+
+            for (Feature lx : x) {
+                int idx = lx.getIndex();
+                // the dimension of testing data may exceed that of training
+                if (idx <= n) {
+                    for (int i = 0; i < nr_w; i++) {
+                        dec_values[i] += w[(idx - 1) * nr_w + i] * lx.getValue();
+                    }
                 }
             }
         }
@@ -574,8 +624,18 @@ public class Linear {
      */
     public static void saveModel(Writer modelOutput, Model model) throws IOException {
         int nr_feature = model.nr_feature;
-        int w_size = nr_feature;
-        if (model.bias >= 0) w_size++;
+        int n, w_size;
+
+        if (model.bias >= 0)
+            n = nr_feature + 1;
+        else
+            n = nr_feature;
+
+        if (POLY2) {
+            w_size = (n + 2) * (n + 1) / 2;
+        } else {
+            w_size = n;
+        }
 
         int nr_w = model.nr_class;
         if (model.nr_class == 2 && model.solverType != SolverType.MCSVM_CS) nr_w = 1;
@@ -594,6 +654,11 @@ public class Linear {
 
             printf(formatter, "nr_feature %d\n", nr_feature);
             printf(formatter, "bias %.16g\n", model.bias);
+
+            if (POLY2) {
+                printf(formatter, "coef0 %.16g\n", model.param.coef0);
+                printf(formatter, "gamma %.16g\n", model.param.gamma);
+            }
 
             printf(formatter, "w\n");
             for (int i = 0; i < w_size; i++) {
