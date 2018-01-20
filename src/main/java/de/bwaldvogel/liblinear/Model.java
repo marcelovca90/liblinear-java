@@ -33,6 +33,8 @@ public final class Model implements Serializable {
     /** feature weight array */
     double[]                  w;
 
+    Parameter                 param;
+
     /**
      * @return number of classes
      */

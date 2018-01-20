@@ -147,6 +147,12 @@ public class Train {
                 case 'B':
                     bias = atof(argv[i]);
                     break;
+                case 'g':
+                    param.setGamma(atof(argv[i]));
+                    break;
+                case 'r':
+                    param.setCoef0(atof(argv[i]));
+                    break;
                 case 'w':
                     int weightLabel = atoi(argv[i - 1].substring(2));
                     double weight = atof(argv[i]);

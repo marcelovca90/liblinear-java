@@ -26,10 +26,10 @@ public final class Parameter {
     double[]   init_sol    = null;
 
     /** coef0 in kernel function (polynomial: (gamma*u'*v + coef0)^degree)) */
-    double     coef0;
+    double     coef0       = 1;
 
     /** gamma in kernel function (polynomial: (gamma*u'*v + coef0)^degree)) */
-    double     gamma;
+    double     gamma       = 1;
 
     public Parameter( SolverType solver, double C, double eps ) {
         setSolverType(solver);
@@ -155,5 +155,21 @@ public final class Parameter {
 
     public double getP() {
         return p;
+    }
+
+    public double getCoef0() {
+        return coef0;
+    }
+
+    public void setCoef0(double coef0) {
+        this.coef0 = coef0;
+    }
+
+    public double getGamma() {
+        return gamma;
+    }
+
+    public void setGamma(double gamma) {
+        this.gamma = gamma;
     }
 }

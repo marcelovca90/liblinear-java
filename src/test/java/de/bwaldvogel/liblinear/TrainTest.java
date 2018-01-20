@@ -30,7 +30,10 @@ public class TrainTest {
 
     @Test
     public void testDoCrossValidationOnIrisDataSet() throws Exception {
-        for (SolverType solver : SolverType.values()) {
+        SolverType[] solvers = new SolverType[] {SolverType.L2R_L2LOSS_SVC_DUAL, SolverType.L2R_L2LOSS_SVC, SolverType.L2R_L1LOSS_SVC_DUAL,
+                                                 SolverType.L2R_L2LOSS_SVR, SolverType.L2R_L2LOSS_SVR_DUAL, SolverType.L2R_L1LOSS_SVR_DUAL};
+
+        for (SolverType solver : solvers) {
             Train.main(new String[] {"-v", "5", "-s", "" + solver.getId(), "src/test/resources/iris.scale"});
         }
     }

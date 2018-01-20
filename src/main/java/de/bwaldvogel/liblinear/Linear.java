@@ -2073,6 +2073,7 @@ public class Linear {
                 }
             }
         }
+        model.param = param;
         return model;
     }
 
