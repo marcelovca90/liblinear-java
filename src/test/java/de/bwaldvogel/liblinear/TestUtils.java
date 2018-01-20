@@ -10,12 +10,10 @@ import java.util.List;
 
 final class TestUtils {
 
-    private TestUtils() {
-    }
+    private TestUtils() {}
 
     static void writeToFile(File file, List<String> lines) throws IOException {
-        try (Writer writer = new FileWriter(file);
-             BufferedWriter bufferedWriter = new BufferedWriter(writer)) {
+        try (Writer writer = new FileWriter(file); BufferedWriter bufferedWriter = new BufferedWriter(writer)) {
             for (String line : lines) {
                 bufferedWriter.append(line).append("\n");
             }

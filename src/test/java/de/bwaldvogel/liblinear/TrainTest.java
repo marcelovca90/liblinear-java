@@ -114,12 +114,7 @@ public class TrainTest {
 
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList(
-                "1 1:1  3:1  4:1   6:1",
-                "2 2:1  3:1  5:1   7:1",
-                "1 3:1  5:1",
-                "1 1:1  4:1  7:1",
-                "2 4:1  5:1  7:1");
+        List<String> lines = Arrays.asList("1 1:1  3:1  4:1   6:1", "2 2:1  3:1  5:1   7:1", "1 3:1  5:1", "1 1:1  4:1  7:1", "2 4:1  5:1  7:1");
 
         writeToFile(file, lines);
 
@@ -129,7 +124,7 @@ public class TrainTest {
         Problem prob = train.getProblem();
         assertThat(prob.bias).isEqualTo(1);
         assertThat(prob.y).hasSize(lines.size());
-        assertThat(prob.y).isEqualTo(new double[] { 1, 2, 1, 1, 2 });
+        assertThat(prob.y).isEqualTo(new double[] {1, 2, 1, 1, 2});
         assertThat(prob.n).isEqualTo(8);
         assertThat(prob.l).isEqualTo(prob.y.length);
         assertThat(prob.x).hasSize(prob.y.length);
@@ -139,11 +134,7 @@ public class TrainTest {
 
     @Test
     public void testReadProblemFromStream() throws Exception {
-        String data = "1 1:1  3:1  4:1   6:1\n"
-            + "2 2:1  3:1  5:1   7:1\n"
-            + "1 3:1  5:1\n"
-            + "1 1:1  4:1  7:1\n"
-            + "2 4:1  5:1  7:1\n";
+        String data = "1 1:1  3:1  4:1   6:1\n" + "2 2:1  3:1  5:1   7:1\n" + "1 3:1  5:1\n" + "1 1:1  4:1  7:1\n" + "2 4:1  5:1  7:1\n";
 
         Charset charset = Charset.forName("UTF-8");
         Problem prob = Train.readProblem(new ByteArrayInputStream(data.getBytes(charset)), charset, 1);
@@ -165,9 +156,7 @@ public class TrainTest {
 
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList(
-                "1 1:1  3:1  4:1   6:1",
-                "2 ");
+        List<String> lines = Arrays.asList("1 1:1  3:1  4:1   6:1", "2 ");
 
         writeToFile(file, lines);
 
@@ -187,10 +176,7 @@ public class TrainTest {
     public void testReadUnsortedProblem() throws Exception {
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList(
-                "1 1:1  3:1  4:1   6:1",
-                "2 2:1  3:1  5:1   7:1",
-                "1 3:1  5:1  4:1"); // here's the mistake: not correctly sorted
+        List<String> lines = Arrays.asList("1 1:1  3:1  4:1   6:1", "2 2:1  3:1  5:1   7:1", "1 3:1  5:1  4:1"); // here's the mistake: not correctly sorted
 
         writeToFile(file, lines);
 
@@ -207,9 +193,7 @@ public class TrainTest {
     public void testReadProblemWithInvalidIndex() throws Exception {
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList(
-                "1 1:1  3:1  4:1   6:1",
-                "2 2:1  3:1  5:1  -4:1");
+        List<String> lines = Arrays.asList("1 1:1  3:1  4:1   6:1", "2 2:1  3:1  5:1  -4:1");
 
         writeToFile(file, lines);
 
@@ -243,10 +227,7 @@ public class TrainTest {
     public void testReadWrongProblem() throws Exception {
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList(
-                "1 1:1  3:1  4:1   6:1",
-                "2 2:1  3:1  5:1   7:1",
-                "1 3:1  5:a"); // here's the mistake: incomplete line
+        List<String> lines = Arrays.asList("1 1:1  3:1  4:1   6:1", "2 2:1  3:1  5:1   7:1", "1 3:1  5:a"); // here's the mistake: incomplete line
 
         writeToFile(file, lines);
 

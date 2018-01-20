@@ -29,7 +29,7 @@ import org.powermock.api.mockito.PowerMockito;
 
 public class LinearTest {
 
-    private static Random random = new Random(12345);
+    private static Random  random          = new Random(12345);
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -197,12 +197,7 @@ public class LinearTest {
     public void testLoadEmptyModel() throws Exception {
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList("solver_type L2R_LR",
-                "nr_class 2",
-                "label 1 2",
-                "nr_feature 0",
-                "bias -1.0",
-                "w");
+        List<String> lines = Arrays.asList("solver_type L2R_LR", "nr_class 2", "label 1 2", "nr_feature 0", "bias -1.0", "w");
         writeToFile(file, lines);
 
         Model model = Model.load(file);
@@ -218,14 +213,8 @@ public class LinearTest {
     public void testLoadSimpleModel() throws Exception {
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList("solver_type L2R_L2LOSS_SVR",
-                "nr_class 2",
-                "label 1 2",
-                "nr_feature 6",
-                "bias -1.0",
-                "w",
-                "0.1 0.2 0.3 ",
-                "0.4 0.5 0.6 ");
+        List<String> lines = Arrays.asList("solver_type L2R_L2LOSS_SVR", "nr_class 2", "label 1 2", "nr_feature 6", "bias -1.0", "w", "0.1 0.2 0.3 ",
+            "0.4 0.5 0.6 ");
         writeToFile(file, lines);
 
         Model model = Model.load(file);
@@ -241,14 +230,8 @@ public class LinearTest {
     public void testLoadIllegalModel() throws Exception {
         File file = temporaryFolder.newFile();
 
-        List<String> lines = Arrays.asList("solver_type L2R_L2LOSS_SVR",
-                "nr_class 2",
-                "label 1 2",
-                "nr_feature 10",
-                "bias -1.0",
-                "w",
-                "0.1 0.2 0.3 ",
-                "0.4 0.5 " + repeat("0", 1024));
+        List<String> lines = Arrays.asList("solver_type L2R_L2LOSS_SVR", "nr_class 2", "label 1 2", "nr_feature 10", "bias -1.0", "w", "0.1 0.2 0.3 ",
+            "0.4 0.5 " + repeat("0", 1024));
         writeToFile(file, lines);
 
         try {
@@ -257,7 +240,7 @@ public class LinearTest {
         } catch (RuntimeException e) {
             String x = repeat("0", 128);
             assertThat(e).hasMessage("illegal weight in model file at index 5, with string content '" + x
-                    + "', is not terminated with a whitespace character, or is longer than expected (128 characters max).");
+                + "', is not terminated with a whitespace character, or is longer than expected (128 characters max).");
         }
     }
 

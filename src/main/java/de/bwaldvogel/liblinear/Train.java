@@ -83,40 +83,23 @@ public class Train {
 
     private void exit_with_help() {
         System.out.printf("Usage: train [options] training_set_file [model_file]%n" //
-            + "options:%n"
-            + "-s type : set type of solver (default 1)%n"
-            + "  for multi-class classification%n"
-            + "    0 -- L2-regularized logistic regression (primal)%n"
-            + "    1 -- L2-regularized L2-loss support vector classification (dual)%n"
+            + "options:%n" + "-s type : set type of solver (default 1)%n" + "  for multi-class classification%n"
+            + "    0 -- L2-regularized logistic regression (primal)%n" + "    1 -- L2-regularized L2-loss support vector classification (dual)%n"
             + "    2 -- L2-regularized L2-loss support vector classification (primal)%n"
-            + "    3 -- L2-regularized L1-loss support vector classification (dual)%n"
-            + "    4 -- support vector classification by Crammer and Singer%n"
-            + "    5 -- L1-regularized L2-loss support vector classification%n"
-            + "    6 -- L1-regularized logistic regression%n"
-            + "    7 -- L2-regularized logistic regression (dual)%n"
-            + "  for regression%n"
-            + "   11 -- L2-regularized L2-loss support vector regression (primal)%n"
-            + "   12 -- L2-regularized L2-loss support vector regression (dual)%n"
-            + "   13 -- L2-regularized L1-loss support vector regression (dual)%n"
-            + "-c cost : set the parameter C (default 1)%n"
-            + "-p epsilon : set the epsilon in loss function of SVR (default 0.1)%n"
-            + "-e epsilon : set tolerance of termination criterion%n"
-            + "   -s 0 and 2%n" + "       |f'(w)|_2 <= eps*min(pos,neg)/l*|f'(w0)|_2,%n"
-            + "       where f is the primal function and pos/neg are # of%n"
-            + "       positive/negative data (default 0.01)%n" + "   -s 11%n"
-            + "       |f'(w)|_2 <= eps*|f'(w0)|_2 (default 0.001)%n"
-            + "   -s 1, 3, 4 and 7%n" + "       Dual maximal violation <= eps; similar to libsvm (default 0.1)%n"
-            + "   -s 5 and 6%n"
-            + "       |f'(w)|_1 <= eps*min(pos,neg)/l*|f'(w0)|_1,%n"
-            + "       where f is the primal function (default 0.01)%n"
-            + "   -s 12 and 13%n"
-            + "       |f'(alpha)|_1 <= eps |f'(alpha0)|,%n"
-            + "       where f is the dual function (default 0.1)%n"
+            + "    3 -- L2-regularized L1-loss support vector classification (dual)%n" + "    4 -- support vector classification by Crammer and Singer%n"
+            + "    5 -- L1-regularized L2-loss support vector classification%n" + "    6 -- L1-regularized logistic regression%n"
+            + "    7 -- L2-regularized logistic regression (dual)%n" + "  for regression%n"
+            + "   11 -- L2-regularized L2-loss support vector regression (primal)%n" + "   12 -- L2-regularized L2-loss support vector regression (dual)%n"
+            + "   13 -- L2-regularized L1-loss support vector regression (dual)%n" + "-c cost : set the parameter C (default 1)%n"
+            + "-p epsilon : set the epsilon in loss function of SVR (default 0.1)%n" + "-e epsilon : set tolerance of termination criterion%n"
+            + "   -s 0 and 2%n" + "       |f'(w)|_2 <= eps*min(pos,neg)/l*|f'(w0)|_2,%n" + "       where f is the primal function and pos/neg are # of%n"
+            + "       positive/negative data (default 0.01)%n" + "   -s 11%n" + "       |f'(w)|_2 <= eps*|f'(w0)|_2 (default 0.001)%n" + "   -s 1, 3, 4 and 7%n"
+            + "       Dual maximal violation <= eps; similar to libsvm (default 0.1)%n" + "   -s 5 and 6%n"
+            + "       |f'(w)|_1 <= eps*min(pos,neg)/l*|f'(w0)|_1,%n" + "       where f is the primal function (default 0.01)%n" + "   -s 12 and 13%n"
+            + "       |f'(alpha)|_1 <= eps |f'(alpha0)|,%n" + "       where f is the dual function (default 0.1)%n"
             + "-B bias : if bias >= 0, instance x becomes [x; bias]; if < 0, no bias term added (default -1)%n"
-            + "-wi weight: weights adjust the parameter C of different classes (see README for details)%n"
-            + "-v n: n-fold cross validation mode%n"
-            + "-C : find parameter C (only for -s 0 and 2)%n"
-            + "-q : quiet mode (no outputs)%n");
+            + "-wi weight: weights adjust the parameter C of different classes (see README for details)%n" + "-v n: n-fold cross validation mode%n"
+            + "-C : find parameter C (only for -s 0 and 2)%n" + "-q : quiet mode (no outputs)%n");
         System.exit(1);
     }
 
@@ -208,8 +191,7 @@ public class Train {
 
         // default solver for parameter selection is L2R_L2LOSS_SVC
         if (find_C) {
-            if (!cross_validation)
-                nr_fold = 5;
+            if (!cross_validation) nr_fold = 5;
             if (!solver_specified) {
                 System.err.printf("Solver not specified. Using -s 2%n");
                 param.setSolverType(SolverType.L2R_L2LOSS_SVC);
@@ -317,8 +299,7 @@ public class Train {
 
                 // assert that indices are valid and sorted
                 if (index <= 0) throw new InvalidInputDataException("invalid index: " + index, lineNr);
-                if (index <= indexBefore)
-                    throw new InvalidInputDataException("indices must be sorted in ascending order", lineNr);
+                if (index <= indexBefore) throw new InvalidInputDataException("indices must be sorted in ascending order", lineNr);
                 indexBefore = index;
 
                 token = st.nextToken();

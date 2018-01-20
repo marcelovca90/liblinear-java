@@ -2,8 +2,8 @@ package de.bwaldvogel.liblinear;
 
 import static de.bwaldvogel.liblinear.Linear.atof;
 import static de.bwaldvogel.liblinear.Linear.atoi;
-import static de.bwaldvogel.liblinear.Linear.printf;
 import static de.bwaldvogel.liblinear.Linear.info;
+import static de.bwaldvogel.liblinear.Linear.printf;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -180,9 +180,9 @@ public class Predict {
         }
 
         try (FileInputStream in = new FileInputStream(argv[i]);
-             BufferedReader reader = new BufferedReader(new InputStreamReader(in, Linear.FILE_CHARSET));
-             FileOutputStream out = new FileOutputStream(argv[i + 2]);
-             Writer writer = new BufferedWriter(new OutputStreamWriter(out, Linear.FILE_CHARSET))) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in, Linear.FILE_CHARSET));
+                FileOutputStream out = new FileOutputStream(argv[i + 2]);
+                Writer writer = new BufferedWriter(new OutputStreamWriter(out, Linear.FILE_CHARSET))) {
             Model model = Linear.loadModel(new File(argv[i + 1]));
             doPredict(reader, writer, model);
         }

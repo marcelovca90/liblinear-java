@@ -5,7 +5,7 @@ public class ParameterSearchResult {
     private final double bestC;
     private final double bestRate;
 
-    public ParameterSearchResult(double bestC, double bestRate) {
+    public ParameterSearchResult( double bestC, double bestRate ) {
         this.bestC = bestC;
         this.bestRate = bestRate;
     }

@@ -7,12 +7,12 @@ public class InvalidInputDataException extends Exception {
 
     private final int         _line;
 
-    public InvalidInputDataException(String message, int line) {
+    public InvalidInputDataException( String message, int line ) {
         super(message);
         _line = line;
     }
 
-    public InvalidInputDataException(String message, int lineNr, Exception cause) {
+    public InvalidInputDataException( String message, int lineNr, Exception cause ) {
         super(message, cause);
         _line = lineNr;
     }

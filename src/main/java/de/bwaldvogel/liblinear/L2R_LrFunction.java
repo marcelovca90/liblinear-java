@@ -7,7 +7,7 @@ class L2R_LrFunction implements Function {
     private final double[] D;
     private final Problem  prob;
 
-    public L2R_LrFunction(Problem prob, double[] C) {
+    public L2R_LrFunction( Problem prob, double[] C ) {
         int l = prob.l;
 
         this.prob = prob;
